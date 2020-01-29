@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+
+  web:
+    container_name: web
+    build: .
+    links:
+      - rabbitmq
+    volumes:
+      - ${APP_PATH_HOST}:${APP_PATH_CONTAINER}
+    ports:
+      - 8080:80
+    working_dir: ${APP_PATH_CONTAINER}
+    restart: always
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    ports:
+      - 8081:15672
+    restart: always
