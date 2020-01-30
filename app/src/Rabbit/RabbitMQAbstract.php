@@ -2,8 +2,12 @@
 
 namespace App\Rabbit;
 
+use App\Log\Logger;
+use Exception;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
+use PhpAmqpLib\Exception\AMQPRuntimeException;
+use RuntimeException;
 
 abstract class RabbitMQAbstract
 {
@@ -11,6 +15,8 @@ abstract class RabbitMQAbstract
     const CONNECT_ERROR_EVENT = 'Event:connectError';
     const SEND_EVENT = 'Event:send';
     const SEND_ERROR_EVENT = 'Event:sendError';
+    const CLOSE_EVENT = 'Event:close';
+    const CLOSE_ERROR_EVENT = 'Event:closeError';
 
     /**
      * @param AMQPStreamConnection
@@ -42,7 +48,20 @@ abstract class RabbitMQAbstract
      * @param array $config
      * @return AMQPStreamConnection
      */
-    abstract protected function connect(array $config);
+    protected function connect(array $config)
+    {
+        try {
+            $connection = new AMQPStreamConnection($config['host'], $config['port'], $config['user'], $config['password']);
+            Logger::getLogInfo(self::CONNECT_EVENT, $config);
+            return $connection;
+        } catch(AMQPRuntimeException $e) {
+            Logger::getLogInfo(self::CONNECT_ERROR_EVENT, $e->getMessage());
+        } catch(RuntimeException $e) {
+            Logger::getLogInfo(self::CONNECT_ERROR_EVENT, $e->getMessage());
+        } catch(Exception $e) {
+            Logger::getLogInfo(self::CONNECT_ERROR_EVENT, $e->getMessage());
+        }
+    }
 
     /**
      * @param AMQPStreamConnection $connection
@@ -61,9 +80,10 @@ abstract class RabbitMQAbstract
         try {
             if ($this->connection !== null) {
                 $this->connection->close();
+                Logger::getLogInfo(self::CLOSE_EVENT);
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
+            Logger::getLogInfo(self::CLOSE_ERROR_EVENT, $e->getMessage());
         }
     }
-
 }

@@ -17,7 +17,9 @@ $queueName = 'fxtm';
 $consumer = new Consumer($config, $queueName);
 
 while (1) {
+
     $limitCounters = 100;
+//  $webSender = new WebSender('url');
 
     for ($i = 0; $i < $limitCounters; $i++) {
 
@@ -29,13 +31,8 @@ while (1) {
         }
 
         $consumer->ack($message->delivery_info['delivery_tag']);
-
-        //Отправка сообщения
-//        $send = new WebSender('url');
-//        $send->send($message->body);
+//       $webSender->send($message->body);
 
         var_dump('===============>  ' . $message->body);
     }
-
-    sleep(1);
 }
