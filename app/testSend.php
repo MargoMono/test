@@ -9,15 +9,15 @@ $config = [
     'port' => 5672,
     'user' => 'guest',
     'password' => 'guest',
+    'queue' => 'fxtm',
 ];
 
-$queueName = 'fxtm';
-
-$producer = new Producer($config, $queueName);
+$producer = new Producer($config);
 
 while (1) {
     $message = generateMessage(10);
     $producer->sendMessage(generateMessage(10));
+    sleep(1);
 }
 
 function generateMessage($length)

@@ -2,12 +2,48 @@
 
 namespace App\Log;
 
+use Monolog\Logger as LoggerBase;
+use Monolog\Handler\StreamHandler;
+
 class Logger
 {
-    static public function getLogInfo(string $event = null, $data = null): void
+    const INFO_EVENT = 'info';
+    const DEBUG_EVENT = 'debug';
+    const ERROR_EVENT = 'error';
+
+    /**
+     * @param mixed $message
+     */
+    public static function info($message)
     {
-        $entry = date("Y-m-d H:i:s") . ": '$event' event info: '" . json_encode($data) . "'\n";
-        file_put_contents('./log/' . date("Y.m.d") . '.log', $entry, FILE_APPEND);
+        self::getLogger(LoggerBase::DEBUG, self::DEBUG_EVENT)->info(json_encode($message));
+    }
+
+    /**
+     * @param mixed $message
+     */
+    public static function debug($message)
+    {
+        self::getLogger(LoggerBase::DEBUG, self::DEBUG_EVENT)->debug(json_encode($message));
+    }
+
+    /**
+     * @param mixed $message
+     */
+    public static function error($message)
+    {
+        self::getLogger(LoggerBase::ERROR, self::ERROR_EVENT)->error(json_encode($message));
+    }
+
+    /**
+     * @param int $level
+     * @param string $event
+     * @return LoggerBase $logger
+     */
+    private static function getLogger(int $level, string $event): LoggerBase
+    {
+        $logger = new LoggerBase($event);
+        $logger->pushHandler(new StreamHandler('logs/' . date("Y_m_d") . '.log', $level, false));
+        return $logger;
     }
 }
-

@@ -2,15 +2,31 @@
 
 namespace App\Rabbit;
 
+use App\Log\Logger;
+use Exception;
+
 class Consumer extends RabbitMQAbstract
 {
+    /**
+     * @return mixed
+     */
     public function getMessage()
     {
-        return $this->channel->basic_get($this->queueName);
+        try {
+            $message = $this->channel->basic_get($this->queueName);
+            Logger::info('Get message => ' . $message->body . ' from queue ' . $this->queueName);
+            return $message;
+        } catch (Exception $e) {
+            Logger::error($e->getMessage());
+        }
     }
 
     public function ack($delivery_tag): void
     {
-        $this->channel->basic_ack($delivery_tag);
-     }
+        try {
+            $this->channel->basic_ack($delivery_tag);
+        } catch (Exception $e) {
+            Logger::error($e->getMessage());
+        }
+    }
 }

@@ -11,13 +11,6 @@ use RuntimeException;
 
 abstract class RabbitMQAbstract
 {
-    const CONNECT_EVENT = 'Event:connect';
-    const CONNECT_ERROR_EVENT = 'Event:connectError';
-    const SEND_EVENT = 'Event:send';
-    const SEND_ERROR_EVENT = 'Event:sendError';
-    const CLOSE_EVENT = 'Event:close';
-    const CLOSE_ERROR_EVENT = 'Event:closeError';
-
     /**
      * @param AMQPStreamConnection
      */
@@ -35,12 +28,11 @@ abstract class RabbitMQAbstract
 
     /**
      * @param array $config
-     * @param string $queueName
      */
-    public function __construct(array $config, string $queueName)
+    public function __construct(array $config)
     {
         $this->connection = $this->connect($config);
-        $this->queueName = $queueName;
+        $this->queueName = $config['queue'];
         $this->channel = $this->channel($this->connection);
     }
 
@@ -52,14 +44,14 @@ abstract class RabbitMQAbstract
     {
         try {
             $connection = new AMQPStreamConnection($config['host'], $config['port'], $config['user'], $config['password']);
-            Logger::getLogInfo(self::CONNECT_EVENT, $config);
+            Logger::info($config);
             return $connection;
-        } catch(AMQPRuntimeException $e) {
-            Logger::getLogInfo(self::CONNECT_ERROR_EVENT, $e->getMessage());
-        } catch(RuntimeException $e) {
-            Logger::getLogInfo(self::CONNECT_ERROR_EVENT, $e->getMessage());
-        } catch(Exception $e) {
-            Logger::getLogInfo(self::CONNECT_ERROR_EVENT, $e->getMessage());
+        } catch (AMQPRuntimeException $e) {
+            Logger::error($e->getMessage());
+        } catch (RuntimeException $e) {
+            Logger::error($e->getMessage());
+        } catch (Exception $e) {
+            Logger::error($e->getMessage());
         }
     }
 
@@ -69,10 +61,13 @@ abstract class RabbitMQAbstract
      */
     protected function channel(AMQPStreamConnection $connection): AMQPChannel
     {
-        $channel = $connection->channel();
-        $channel->queue_declare($this->queueName, false, false, false, false);
-
-        return $channel;
+        try {
+            $channel = $connection->channel();
+            $channel->queue_declare($this->queueName, false, false, false, false);
+            return $channel;
+        } catch (Exception $e) {
+            Logger::error($e->getMessage());
+        }
     }
 
     function cleanupConnection()
@@ -80,10 +75,10 @@ abstract class RabbitMQAbstract
         try {
             if ($this->connection !== null) {
                 $this->connection->close();
-                Logger::getLogInfo(self::CLOSE_EVENT);
+                Logger::info('cleanupConnection');
             }
         } catch (Exception $e) {
-            Logger::getLogInfo(self::CLOSE_ERROR_EVENT, $e->getMessage());
+            Logger::error($e->getMessage());
         }
     }
 }

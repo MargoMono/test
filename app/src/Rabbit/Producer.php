@@ -16,10 +16,11 @@ class Producer extends RabbitMQAbstract
     {
         try {
             $this->channel->basic_publish(new AMQPMessage($message), '', $this->queueName);
-        } catch(AMQPChannelClosedException $e) {
-            Logger::getLogInfo(parent::SEND_ERROR_EVENT, $e->getMessage());
-        } catch(Exception $e) {
-            Logger::getLogInfo(parent::SEND_ERROR_EVENT, $e->getMessage());
+            Logger::info('Send message => ' . $message . ' into queue ' . $this->queueName);
+        } catch (AMQPChannelClosedException $e) {
+            Logger::error($e->getMessage());
+        } catch (Exception $e) {
+            Logger::error($e->getMessage());
         }
     }
 }
