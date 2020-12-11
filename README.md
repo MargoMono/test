@@ -1,4 +1,4 @@
-# Test for PHP Developer - FXTM
+# Test for PHP Developer
 
 ## Installation
 
